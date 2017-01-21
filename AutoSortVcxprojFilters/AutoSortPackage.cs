@@ -43,6 +43,7 @@ namespace AutoSortVcxprojFilters
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasSingleProject_string)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasMultipleProjects_string)]
+    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionOpening_string)]
     public sealed class AutoSortPackage : Package, IVsSolutionEvents3
     {
         /// <summary>
@@ -175,7 +176,7 @@ namespace AutoSortVcxprojFilters
         {
             return _dte.Solution.Projects
                 .Cast<EnvDTE.Project>()
-                .Select(x => ((VSProject)x.Object).Project)
+                .Where(x => { return x?.Object != null; })
                 .ToArray();
         }
 
@@ -183,13 +184,20 @@ namespace AutoSortVcxprojFilters
         {
             var projects = GetProjects();
             var newSorters = new List<VCXFilterSorter>();
-            foreach(var proj in projects)
+            if (projects != null)
             {
-                var obj = sorters.Find(x => { return x.Path == System.IO.Path.GetDirectoryName(proj.FullName)})
-                if (obj != null)
+                foreach(var proj in projects)
                 {
-                    newSorters.Add(obj);
-                    sorters.Remove(obj);
+                    var obj = sorters.Find(x => { return x.Path == System.IO.Path.GetDirectoryName(proj.FullName); });
+                    if (obj != null)
+                    {
+                        newSorters.Add(obj);
+                        sorters.Remove(obj);
+                    }
+                    else
+                    {
+                        newSorters.Add(new VCXFilterSorter(proj));
+                    }
                 }
             }
             foreach(var sort in sorters)

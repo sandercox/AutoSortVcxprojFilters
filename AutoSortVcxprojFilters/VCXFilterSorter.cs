@@ -16,7 +16,7 @@ namespace AutoSortVcxprojFilters
 
         private FileSystemWatcher _watcher;
 
-        VCXFilterSorter(Project project)
+        public VCXFilterSorter(Project project)
         {
             ProjectName = System.IO.Path.GetFileName(project.FullName);
             Path = System.IO.Path.GetDirectoryName(project.FullName);
@@ -24,6 +24,7 @@ namespace AutoSortVcxprojFilters
             _watcher = new FileSystemWatcher(Path, "*.vcxproj*");
             _watcher.Created += _watcher_Created;
             _watcher.Changed += _watcher_Changed;
+            _watcher.EnableRaisingEvents = true;
         }
 
         private void _watcher_Changed(object sender, FileSystemEventArgs e)
@@ -44,20 +45,22 @@ namespace AutoSortVcxprojFilters
             }
         }
 
-        private static void sortFile(string filename)
+        private void sortFile(string filename)
         {
             try
             {
                 if (System.IO.File.Exists(filename))
                 {
-                    var xmldoc = new XDocument(filename);
-                    foreach(var itemgroup in xmldoc.Elements("{http://schemas.microsoft.com/developer/msbuild/2003}ItemGroup"))
+                    var xmldoc = XDocument.Load(filename);
+                    foreach(var itemgroup in xmldoc.Root.Elements("{http://schemas.microsoft.com/developer/msbuild/2003}ItemGroup"))
                     {
                         itemgroup.ReplaceNodes(from elem in itemgroup.Elements()
                                                orderby elem.Attribute("Include")?.Value
                                                select elem);
                     }
+                    _watcher.EnableRaisingEvents = false;
                     xmldoc.Save(filename);
+                    _watcher.EnableRaisingEvents = true;
                 }
             } catch (Exception ex)
             {
@@ -76,6 +79,9 @@ namespace AutoSortVcxprojFilters
                     // TODO: dispose managed state (managed objects).
                     if (_watcher != null)
                     {
+                        _watcher.EnableRaisingEvents = false;
+                        _watcher.Changed -= _watcher_Changed;
+                        _watcher.Created -= _watcher_Created;
                         _watcher.Dispose();
                         _watcher = null;
                     }
