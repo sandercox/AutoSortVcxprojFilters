@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("AutoSortVcxprojFilters")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Visual Studio Extension for auto sorting vcxproj.filters files")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Parallel Dimension")]
 [assembly: AssemblyProduct("AutoSortVcxprojFilters")]
-[assembly: AssemblyCopyright("")]
+[assembly: AssemblyCopyright("(c) 2017 Parallel Dimension - Sander Cox")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
