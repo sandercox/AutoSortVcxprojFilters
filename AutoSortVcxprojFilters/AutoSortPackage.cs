@@ -39,6 +39,7 @@ namespace AutoSortVcxprojFilters
     /// </remarks>
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
+    [ProvideMenuResource("Menus.ctmenu", 1)]
     [Guid(AutoSortPackage.PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasSingleProject_string)]
@@ -56,6 +57,8 @@ namespace AutoSortVcxprojFilters
         private uint _hSolutionEvents = uint.MaxValue;
 
         private List<VCXFilterSorter> sorters = new List<VCXFilterSorter>();
+        internal List<VCXFilterSorter> Sorters { get { return sorters; } }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="AutoSortPackage"/> class.
         /// </summary>
@@ -172,7 +175,7 @@ namespace AutoSortVcxprojFilters
             }
         }
 
-        private EnvDTE.Project[] GetProjects()
+        public EnvDTE.Project[] GetProjects()
         {
             return _dte.Solution.Projects
                 .Cast<EnvDTE.Project>()
@@ -217,6 +220,7 @@ namespace AutoSortVcxprojFilters
         protected override void Initialize()
         {
             base.Initialize();
+            SortAllCommand.Initialize(this);
 
             this._dte = GetService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
             AdviseSolutionEvents();

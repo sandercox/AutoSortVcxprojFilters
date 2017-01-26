@@ -53,6 +53,7 @@
   <ItemGroup>
     <Compile Include="AutoSortPackage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SortAllCommand.cs" />
     <Compile Include="VCXFilterSorter.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -69,6 +70,11 @@
   <ItemGroup>
     <Content Include="index.html" />
     <Content Include="Resources\AutoSortPackage.ico" />
+    <VSCTCompile Include="SortAllCommandPackage.vsct">
+      <ResourceName>Menus.ctmenu</ResourceName>
+    </VSCTCompile>
+    <Content Include="Resources\SortAllCommand.png" />
+    <Content Include="Resources\SortAllCommandPackage.ico" />
     <Content Include="stylesheet.css" />
   </ItemGroup>
   <ItemGroup>

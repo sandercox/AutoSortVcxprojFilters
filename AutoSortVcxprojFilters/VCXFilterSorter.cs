@@ -32,7 +32,9 @@ namespace AutoSortVcxprojFilters
             if (e.Name.EndsWith(".vcxproj.filters"))
             {
                 // file changed try resort
-                sortFile(e.FullPath);
+                _watcher.EnableRaisingEvents = false;
+                Sort(e.FullPath);
+                _watcher.EnableRaisingEvents = true;
             }
         }
 
@@ -41,11 +43,23 @@ namespace AutoSortVcxprojFilters
             if (e.Name.EndsWith(".vcxproj.filters"))
             {
                 // file created - try resort
-                sortFile(e.FullPath);
+                _watcher.EnableRaisingEvents = false;
+                Sort(e.FullPath);
+                _watcher.EnableRaisingEvents = true;
             }
         }
 
-        private void sortFile(string filename)
+        public void StopWatching()
+        {
+            _watcher.EnableRaisingEvents = false;
+        }
+
+        public void StartWatching()
+        {
+            _watcher.EnableRaisingEvents = true;
+        }
+
+        public static void Sort(string filename)
         {
             try
             {
@@ -58,9 +72,7 @@ namespace AutoSortVcxprojFilters
                                                orderby elem.Attribute("Include")?.Value
                                                select elem);
                     }
-                    _watcher.EnableRaisingEvents = false;
                     xmldoc.Save(filename);
-                    _watcher.EnableRaisingEvents = true;
                 }
             } catch (Exception ex)
             {
