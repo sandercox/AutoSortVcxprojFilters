@@ -11,72 +11,77 @@ namespace AutoSortVcxprojFilters
 {
     class VCXFilterSorter : IDisposable
     {
-        public string Path { get; }
-        public string ProjectName { get; }
+        private string Path { get; set; }
+        private string ProjectName { get; set; }
+        public  string FullProjectName { get; private set; }
+        private string VcxprojFiltersName { get; set; }
+        private string FullVcxprojFiltersName { get; set; }
 
-        private FileSystemWatcher _watcher;
+        private FileSystemWatcher m_FileSystemWatcher;
 
         public VCXFilterSorter(Project project)
         {
             ProjectName = System.IO.Path.GetFileName(project.FullName);
             Path = System.IO.Path.GetDirectoryName(project.FullName);
 
-            _watcher = new FileSystemWatcher(Path, "*.vcxproj*");
-            _watcher.Created += _watcher_Created;
-            _watcher.Changed += _watcher_Changed;
-            _watcher.EnableRaisingEvents = true;
+            FullProjectName = Path + System.IO.Path.DirectorySeparatorChar + ProjectName;
+
+            VcxprojFiltersName = ProjectName + @".filters";
+            FullVcxprojFiltersName = Path + System.IO.Path.DirectorySeparatorChar + VcxprojFiltersName;
+
+            m_FileSystemWatcher = new FileSystemWatcher(Path, VcxprojFiltersName);
+            m_FileSystemWatcher.Created += m_FileSystemWatcher_Created;
+            m_FileSystemWatcher.Changed += m_FileSystemWatcher_Changed;
+            m_FileSystemWatcher.EnableRaisingEvents = true;
         }
 
-        private void _watcher_Changed(object sender, FileSystemEventArgs e)
+        private void m_FileSystemWatcher_Changed(object sender, FileSystemEventArgs e)
         {
             if (e.Name.EndsWith(".vcxproj.filters"))
             {
-                // file changed try resort
-                _watcher.EnableRaisingEvents = false;
-                Sort(e.FullPath);
-                _watcher.EnableRaisingEvents = true;
+                Sort();
             }
         }
 
-        private void _watcher_Created(object sender, FileSystemEventArgs e)
+        private void m_FileSystemWatcher_Created(object sender, FileSystemEventArgs e)
         {
             if (e.Name.EndsWith(".vcxproj.filters"))
             {
-                // file created - try resort
-                _watcher.EnableRaisingEvents = false;
-                Sort(e.FullPath);
-                _watcher.EnableRaisingEvents = true;
+                Sort();
             }
         }
 
-        public void StopWatching()
+        private void StopWatching()
         {
-            _watcher.EnableRaisingEvents = false;
+            m_FileSystemWatcher.EnableRaisingEvents = false;
         }
 
-        public void StartWatching()
+        private void StartWatching()
         {
-            _watcher.EnableRaisingEvents = true;
+            m_FileSystemWatcher.EnableRaisingEvents = true;
         }
 
-        public static void Sort(string filename)
+        public void Sort()
         {
-            try
+            StopWatching();
+
+            if (System.IO.File.Exists(FullVcxprojFiltersName))
             {
-                if (System.IO.File.Exists(filename))
+                System.Threading.Thread.Sleep(200); // Avoid load fail
+
+                XDocument xmlDocument = XDocument.Load(FullVcxprojFiltersName);
+
+                foreach (var itemgroup in xmlDocument.Root.Elements("{http://schemas.microsoft.com/developer/msbuild/2003}ItemGroup"))
                 {
-                    var xmldoc = XDocument.Load(filename);
-                    foreach(var itemgroup in xmldoc.Root.Elements("{http://schemas.microsoft.com/developer/msbuild/2003}ItemGroup"))
-                    {
-                        itemgroup.ReplaceNodes(from elem in itemgroup.Elements()
-                                               orderby elem.Attribute("Include")?.Value
-                                               select elem);
-                    }
-                    xmldoc.Save(filename);
+                    itemgroup.ReplaceNodes(from elem in itemgroup.Elements()
+                                           orderby elem.Attribute("Include")?.Value
+                                           select elem);
                 }
-            } catch (Exception ex)
-            {
+
+                xmlDocument.Save(FullVcxprojFiltersName);
             }
+
+            StartWatching();
         }
 
         #region IDisposable Support
@@ -89,13 +94,13 @@ namespace AutoSortVcxprojFilters
                 if (disposing)
                 {
                     // TODO: dispose managed state (managed objects).
-                    if (_watcher != null)
+                    if (m_FileSystemWatcher != null)
                     {
-                        _watcher.EnableRaisingEvents = false;
-                        _watcher.Changed -= _watcher_Changed;
-                        _watcher.Created -= _watcher_Created;
-                        _watcher.Dispose();
-                        _watcher = null;
+                        m_FileSystemWatcher.EnableRaisingEvents = false;
+                        m_FileSystemWatcher.Changed -= m_FileSystemWatcher_Changed;
+                        m_FileSystemWatcher.Created -= m_FileSystemWatcher_Created;
+                        m_FileSystemWatcher.Dispose();
+                        m_FileSystemWatcher = null;
                     }
                 }
 

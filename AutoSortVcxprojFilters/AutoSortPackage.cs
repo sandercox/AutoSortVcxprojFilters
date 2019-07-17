@@ -191,7 +191,7 @@ namespace AutoSortVcxprojFilters
             {
                 foreach(var proj in projects)
                 {
-                    var obj = sorters.Find(x => { return x.Path == System.IO.Path.GetDirectoryName(proj.FullName); });
+                    var obj = sorters.Find(x => { return x.FullProjectName == proj.FullName; });
                     if (obj != null)
                     {
                         newSorters.Add(obj);
