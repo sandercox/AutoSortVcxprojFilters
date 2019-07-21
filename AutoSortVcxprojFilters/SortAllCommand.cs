@@ -6,9 +6,7 @@
 
 using System;
 using System.ComponentModel.Design;
-using System.Globalization;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 
 namespace AutoSortVcxprojFilters
 {
@@ -93,7 +91,12 @@ namespace AutoSortVcxprojFilters
         /// <param name="e">Event args.</param>
         private void MenuItemCallback(object sender, EventArgs e)
         {
-            package.Sorters.ForEach((x) => x.Sort() );
+            var projects = package.GetProjects();
+
+            foreach (var proj in projects)
+            {
+                VCXFilterSorter.Sort(proj.FullName + @".filters");
+            }
         }
     }
 }

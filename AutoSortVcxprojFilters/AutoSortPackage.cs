@@ -17,6 +17,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
 using System.Collections.Generic;
 using System.Linq;
+using EnvDTE;
 
 namespace AutoSortVcxprojFilters
 {
@@ -45,19 +46,16 @@ namespace AutoSortVcxprojFilters
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasSingleProject_string)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasMultipleProjects_string)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionOpening_string)]
-    public sealed class AutoSortPackage : Package, IVsSolutionEvents3
+    public sealed class AutoSortPackage : Package
     {
         /// <summary>
         /// AutoSortPackage GUID string.
         /// </summary>
         public const string PackageGuidString = "01a71080-33cd-4769-883b-07242c7c6c3e";
 
-        private EnvDTE.DTE _dte;
-        private IVsSolution _solution;
-        private uint _hSolutionEvents = uint.MaxValue;
-
-        private List<VCXFilterSorter> sorters = new List<VCXFilterSorter>();
-        internal List<VCXFilterSorter> Sorters { get { return sorters; } }
+        private EnvDTE.DTE m_dte;
+        private IVsSolution m_solution;
+        private uint m_hSolutionEvents = uint.MaxValue;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AutoSortPackage"/> class.
@@ -69,150 +67,16 @@ namespace AutoSortVcxprojFilters
             // not sited yet inside Visual Studio environment. The place to do all the other
             // initialization is the Initialize method.
         }
-        #region IVSSolutionEvents3
-        public int OnAfterCloseSolution(object pUnkReserved)
-        {
-            return VSConstants.S_OK;
-        }
-
-        public int OnAfterClosingChildren(IVsHierarchy pHierarchy)
-        {
-            return VSConstants.S_OK;
-        }
-
-        public int OnAfterLoadProject(IVsHierarchy pStubHierarchy, IVsHierarchy pRealHierarchy)
-        {
-            return VSConstants.S_OK;
-        }
-
-        public int OnAfterMergeSolution(object pUnkReserved)
-        {
-            return VSConstants.S_OK;
-        }
-
-        public int OnAfterOpeningChildren(IVsHierarchy pHierarchy)
-        {
-            UpdateTrackedFilters();
-            return VSConstants.S_OK;
-        }
-
-        public int OnAfterOpenProject(IVsHierarchy pHierarchy, int fAdded)
-        {
-            UpdateTrackedFilters();
-            return VSConstants.S_OK;
-        }
-
-        public int OnAfterOpenSolution(object pUnkReserved, int fNewSolution)
-        {
-            UpdateTrackedFilters();
-            return VSConstants.S_OK;
-        }
-
-        public int OnBeforeCloseProject(IVsHierarchy pHierarchy, int fRemoved)
-        {
-            UpdateTrackedFilters();
-            return VSConstants.S_OK;
-        }
-
-        public int OnBeforeCloseSolution(object pUnkReserved)
-        {
-            return VSConstants.S_OK;
-        }
-
-        public int OnBeforeClosingChildren(IVsHierarchy pHierarchy)
-        {
-            return VSConstants.S_OK;
-        }
-
-        public int OnBeforeOpeningChildren(IVsHierarchy pHierarchy)
-        {
-            return VSConstants.S_OK;
-        }
-
-        public int OnBeforeUnloadProject(IVsHierarchy pRealHierarchy, IVsHierarchy pStubHierarchy)
-        {
-            return VSConstants.S_OK;
-        }
-
-        public int OnQueryCloseProject(IVsHierarchy pHierarchy, int fRemoving, ref int pfCancel)
-        {
-            return VSConstants.S_OK;
-        }
-
-        public int OnQueryCloseSolution(object pUnkReserved, ref int pfCancel)
-        {
-            return VSConstants.S_OK;
-        }
-
-        public int OnQueryUnloadProject(IVsHierarchy pRealHierarchy, ref int pfCancel)
-        {
-            return VSConstants.S_OK;
-        }
-
-        void AdviseSolutionEvents()
-        {
-            UnAdviseSolutionEvents();
-
-            _solution = this.GetService(typeof(SVsSolution)) as IVsSolution;
-
-            if (_solution != null)
-            {
-                _solution.AdviseSolutionEvents(this, out _hSolutionEvents);
-                if (_hSolutionEvents == uint.MaxValue)
-                {
-                    _solution = null;
-                }
-            }
-
-        }
-
-        void UnAdviseSolutionEvents()
-        {
-            if ( _solution != null)
-            {
-                _solution.UnadviseSolutionEvents(_hSolutionEvents);
-                _solution = null;
-            }
-        }
 
         public EnvDTE.Project[] GetProjects()
         {
-            return _dte.Solution.Projects
+            return m_dte.Solution.Projects
                 .Cast<EnvDTE.Project>()
                 .Where(x => { return x?.Object != null; })
                 .ToArray();
         }
-
-        private void UpdateTrackedFilters()
-        {
-            var projects = GetProjects();
-            var newSorters = new List<VCXFilterSorter>();
-            if (projects != null)
-            {
-                foreach(var proj in projects)
-                {
-                    var obj = sorters.Find(x => { return x.FullProjectName == proj.FullName; });
-                    if (obj != null)
-                    {
-                        newSorters.Add(obj);
-                        sorters.Remove(obj);
-                    }
-                    else
-                    {
-                        newSorters.Add(new VCXFilterSorter(proj));
-                    }
-                }
-            }
-            foreach(var sort in sorters)
-            {
-                sort.Dispose();
-            }
-            sorters = newSorters;
-        }
-        #endregion
-
+        
         #region Package Members
-
         /// <summary>
         /// Initialization of the package; this method is called right after the package is sited, so this is the place
         /// where you can put all the initialization code that rely on services provided by VisualStudio.
@@ -220,19 +84,16 @@ namespace AutoSortVcxprojFilters
         protected override void Initialize()
         {
             base.Initialize();
+
             SortAllCommand.Initialize(this);
 
-            this._dte = GetService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
-            AdviseSolutionEvents();
+            m_dte = GetService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
+
+            var runningDocumentTable = (IVsRunningDocumentTable)GetGlobalService(typeof(SVsRunningDocumentTable));
+
+            uint pdwCookie;
+            runningDocumentTable.AdviseRunningDocTableEvents(new SortFilterOnAfterSave(runningDocumentTable), out pdwCookie);
         }
-
-        protected override void Dispose(bool disposing)
-        {
-            UnAdviseSolutionEvents();
-
-            base.Dispose(disposing);
-        }
-
         #endregion
     }
 }
