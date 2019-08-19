@@ -39,14 +39,14 @@ namespace AutoSortVcxprojFilters
     /// To get loaded into VS, the package must be referred by &lt;Asset Type="Microsoft.VisualStudio.VsPackage" ...&gt; in .vsixmanifest file.
     /// </para>
     /// </remarks>
-    [PackageRegistration(UseManagedResourcesOnly = true)]
+    [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [Guid(AutoSortPackage.PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
-    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasSingleProject_string)]
-    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasMultipleProjects_string)]
-    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionOpening_string)]
+    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasSingleProject_string, PackageAutoLoadFlags.BackgroundLoad)]
+    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasMultipleProjects_string, PackageAutoLoadFlags.BackgroundLoad)]
+    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionOpening_string, PackageAutoLoadFlags.BackgroundLoad)]
     public sealed class AutoSortPackage : Microsoft.VisualStudio.Shell.AsyncPackage
     {
         /// <summary>
