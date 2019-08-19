@@ -30,7 +30,7 @@ namespace AutoSortVcxprojFilters
 
         public int OnAfterSave(uint docCookie)
         {
-            uint pgrfRDTFlags, pdwReadLocks, pdwEditLocks, pitemid, e;
+            uint pgrfRDTFlags, pdwReadLocks, pdwEditLocks, pitemid;
             IVsHierarchy ppHier;
             IntPtr ppunkDocData;
 

@@ -18,6 +18,7 @@ using Microsoft.Win32;
 using System.Collections.Generic;
 using System.Linq;
 using EnvDTE;
+using System.Threading;
 
 namespace AutoSortVcxprojFilters
 {
@@ -46,7 +47,7 @@ namespace AutoSortVcxprojFilters
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasSingleProject_string)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasMultipleProjects_string)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionOpening_string)]
-    public sealed class AutoSortPackage : Package
+    public sealed class AutoSortPackage : Microsoft.VisualStudio.Shell.AsyncPackage
     {
         /// <summary>
         /// AutoSortPackage GUID string.
@@ -54,8 +55,6 @@ namespace AutoSortVcxprojFilters
         public const string PackageGuidString = "01a71080-33cd-4769-883b-07242c7c6c3e";
 
         private EnvDTE.DTE m_dte;
-        private IVsSolution m_solution;
-        private uint m_hSolutionEvents = uint.MaxValue;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AutoSortPackage"/> class.
@@ -81,18 +80,15 @@ namespace AutoSortVcxprojFilters
         /// Initialization of the package; this method is called right after the package is sited, so this is the place
         /// where you can put all the initialization code that rely on services provided by VisualStudio.
         /// </summary>
-        protected override void Initialize()
+        protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
-            base.Initialize();
+            await base.InitializeAsync(cancellationToken, progress);
 
             SortAllCommand.Initialize(this);
 
-            m_dte = GetService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
-
+            m_dte = await GetServiceAsync(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
             var runningDocumentTable = (IVsRunningDocumentTable)GetGlobalService(typeof(SVsRunningDocumentTable));
-
-            uint pdwCookie;
-            runningDocumentTable.AdviseRunningDocTableEvents(new SortFilterOnAfterSave(runningDocumentTable), out pdwCookie);
+            runningDocumentTable.AdviseRunningDocTableEvents(new SortFilterOnAfterSave(runningDocumentTable), out _);
         }
         #endregion
     }

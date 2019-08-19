@@ -44,7 +44,7 @@ namespace AutoSortVcxprojFilters
 
             this.package = package as AutoSortPackage;
 
-            OleMenuCommandService commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            OleMenuCommandService commandService = this.package.GetServiceAsync(typeof(IMenuCommandService)).Result as OleMenuCommandService;
             if (commandService != null)
             {
                 var menuCommandID = new CommandID(CommandSet, CommandId);
@@ -60,17 +60,6 @@ namespace AutoSortVcxprojFilters
         {
             get;
             private set;
-        }
-
-        /// <summary>
-        /// Gets the service provider from the owner package.
-        /// </summary>
-        private IServiceProvider ServiceProvider
-        {
-            get
-            {
-                return this.package;
-            }
         }
 
         /// <summary>
