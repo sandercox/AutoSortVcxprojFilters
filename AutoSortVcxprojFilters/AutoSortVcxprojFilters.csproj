@@ -54,6 +54,7 @@
     <Compile Include="AutoSortPackage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SortAllCommand.cs" />
+    <Compile Include="SortFilterOnAfterSave.cs" />
     <Compile Include="VCXFilterSorter.cs" />
   </ItemGroup>
   <ItemGroup>
