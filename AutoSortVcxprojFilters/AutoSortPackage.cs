@@ -69,7 +69,7 @@ namespace AutoSortVcxprojFilters
 
         public EnvDTE.Project[] GetProjects()
         {
-            return m_dte.Solution.Projects
+            return m_dte?.Solution.Projects
                 .Cast<EnvDTE.Project>()
                 .Where(x => { return x?.Object != null; })
                 .ToArray();
@@ -84,11 +84,15 @@ namespace AutoSortVcxprojFilters
         {
             await base.InitializeAsync(cancellationToken, progress);
 
-            SortAllCommand.Initialize(this);
 
-            m_dte = await GetServiceAsync(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
+            m_dte = GetGlobalService(typeof(EnvDTE.DTE)) as EnvDTE.DTE; 
             var runningDocumentTable = (IVsRunningDocumentTable)GetGlobalService(typeof(SVsRunningDocumentTable));
             runningDocumentTable.AdviseRunningDocTableEvents(new SortFilterOnAfterSave(runningDocumentTable), out _);
+
+            var commandService = await GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService;
+            await JoinableTaskFactory.SwitchToMainThreadAsync();
+            SortAllCommand.Initialize(this, commandService);
+
         }
         #endregion
     }

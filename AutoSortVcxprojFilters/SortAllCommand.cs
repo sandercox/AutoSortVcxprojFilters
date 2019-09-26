@@ -35,7 +35,7 @@ namespace AutoSortVcxprojFilters
         /// Adds our command handlers for menu (commands must exist in the command table file)
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
-        private SortAllCommand(Package package)
+        private SortAllCommand(Package package, OleMenuCommandService commandService)
         {
             if (package == null)
             {
@@ -43,8 +43,6 @@ namespace AutoSortVcxprojFilters
             }
 
             this.package = package as AutoSortPackage;
-
-            OleMenuCommandService commandService = this.package.GetServiceAsync(typeof(IMenuCommandService)).Result as OleMenuCommandService;
             if (commandService != null)
             {
                 var menuCommandID = new CommandID(CommandSet, CommandId);
@@ -66,9 +64,9 @@ namespace AutoSortVcxprojFilters
         /// Initializes the singleton instance of the command.
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
-        public static void Initialize(Package package)
+        public static void Initialize(Package package, OleMenuCommandService commandService)
         {
-            Instance = new SortAllCommand(package);
+            Instance = new SortAllCommand(package, commandService);
         }
 
         /// <summary>
@@ -81,10 +79,12 @@ namespace AutoSortVcxprojFilters
         private void MenuItemCallback(object sender, EventArgs e)
         {
             var projects = package.GetProjects();
-
-            foreach (var proj in projects)
+            if(projects != null)
             {
-                VCXFilterSorter.Sort(proj.FullName + @".filters");
+                foreach (var proj in projects)
+                {
+                    VCXFilterSorter.Sort(proj.FullName + @".filters");
+                }
             }
         }
     }
